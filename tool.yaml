@@ -87,10 +87,10 @@ compatibility:
       notes: VMware Aria Operations. Below the baseline.
 
 permissions:
-  summary: Read-only. Needs a dedicated service account with a read-only role. Never needs an administrator account.
-  account: Dedicated service account (local or from your identity source). Not a named person, not admin.
-  role: Built-in ReadOnly role, or a custom role cloned from it.
-  scope: All objects the tool reports on. Narrow it to specific object types if your security model needs it.
+  summary: The tool only reads. It runs under a dedicated service account with a read-only role and never needs an administrator account.
+  account: A dedicated service account, local or from your identity source. Not a person's account, and not an administrator.
+  role: The built-in ReadOnly role, or a custom role cloned from it.
+  scope: The objects the tool reports on. Narrow it to specific object types if your security model requires it.
   # Mark rows with example: true until you have confirmed them against a real
   # deployment. `repokit.py check --strict` (run on every release) fails while any remain.
   privileges:

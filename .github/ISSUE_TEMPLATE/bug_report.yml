@@ -5,8 +5,8 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time. **Before pasting anything, remove host names, IP addresses,
-        user names and tokens.** Use `ops.rainpole.io` and `198.51.100.x` as stand-ins.
+        Before pasting anything, remove host names, IP addresses, user names and tokens.
+        Use `ops.rainpole.io` and `198.51.100.x` as stand-ins.
   - type: textarea
     id: what-happened
     attributes:

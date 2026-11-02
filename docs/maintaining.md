@@ -2,8 +2,9 @@
 
 ## repokit
 
-`scripts/repokit.py` keeps the repository honest. `tool.yaml` is the single source of truth; anything a
-reader sees in more than one place is generated from it.
+`scripts/repokit.py` keeps the repository consistent. `tool.yaml` is the single source of truth, and
+anything a reader sees in more than one place is generated from it, so the README, the docs and the
+project page cannot disagree about versions or permissions.
 
 | Command | What it does |
 | --- | --- |

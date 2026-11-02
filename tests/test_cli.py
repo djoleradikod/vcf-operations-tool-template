@@ -89,3 +89,13 @@ def test_missing_password_without_tty(monkeypatch, capsys):
 def test_password_is_not_a_flag():
     options = {a for action in cli.build_parser()._actions for a in action.option_strings}
     assert not any("pass" in o for o in options)
+
+
+def test_untested_version_warns_but_succeeds(wired, capsys):
+    wired.routes[("GET", "/suite-api/api/versions/current")] = FakeResponse(
+        200, {"major": 9, "minor": 9, "minorMinor": 0}
+    )
+    assert cli.main(["check"]) == 0
+    captured = capsys.readouterr()
+    assert "[WARN] Compatibility: untested" in captured.out
+    assert "has not been tested" in captured.err

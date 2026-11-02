@@ -1,17 +1,28 @@
 # Permissions
 
 <!-- repokit:begin permissions -->
-**Read-only. Needs a dedicated service account with a read-only role. Never needs an administrator account.**
+The tool only reads. It runs under a dedicated service account with a read-only role and never needs an administrator account.
 
-- **Account:** Dedicated service account (local or from your identity source). Not a named person, not admin.
-- **Role:** Built-in ReadOnly role, or a custom role cloned from it.
-- **Scope:** All objects the tool reports on. Narrow it to specific object types if your security model needs it.
+| Item | Requirement |
+| --- | --- |
+| Account | A dedicated service account, local or from your identity source. Not a person's account, and not an administrator. |
+| Role | The built-in ReadOnly role, or a custom role cloned from it. |
+| Scope | The objects the tool reports on. Narrow it to specific object types if your security model requires it. |
+
+The role needs these permissions and no others:
 
 | Area | Access | Why it is needed |
 | --- | --- | --- |
 | Suite API | Read | Acquire a session token and read the product version. |
 
-**Not required, never ask for it:** Administrator or any built-in admin role; Write access to policies, alerts, dashboards or adapters; Shell or SSH access to any appliance; vCenter, NSX or SDDC Manager credentials.
+The tool does not need any of the following. Treat a request for them as a bug.
+
+- Administrator or any built-in admin role
+- Write access to policies, alerts, dashboards or adapters
+- Shell or SSH access to any appliance
+- vCenter, NSX or SDDC Manager credentials
+
+Network flows:
 
 | From | To | Port | Purpose |
 | --- | --- | --- | --- |
@@ -20,13 +31,17 @@
 
 ## Principles
 
-1. **A dedicated service account per tool.** Not a person's account, and not shared with other
-   integrations, so it can be audited, rotated and removed on its own.
-2. **Read-only role.** The tool's client refuses state-changing calls in code, and the role makes sure the
-   server would refuse them too. Two independent controls.
-3. **Never administrator.** If a feature ever seems to need admin rights, that feature is redesigned or
-   dropped. Issues asking users to "just use admin" are closed.
-4. **Narrowest scope that works.** Start with the objects the tool reports on.
+Each tool runs under its own service account. A person's account changes when they change roles or
+leave, and an account shared between integrations cannot be audited, rotated or removed without
+affecting everything else that uses it. A dedicated account avoids both problems.
+
+The account holds a read-only role. The tool's API client already refuses calls that change state,
+so the role is a second, independent control: if a defect in the client ever let a write through,
+VCF Operations would still reject it. We rely on having both.
+
+No tool in this family needs an administrator account. If a feature appears to require one, we
+redesign the feature or drop it; we do not ask operators to widen the role. Scope follows the same
+rule: grant access to the objects the tool reports on, and nothing broader.
 
 ## Set up the service account
 

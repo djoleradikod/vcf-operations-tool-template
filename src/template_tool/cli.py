@@ -127,7 +127,17 @@ def cmd_check(args: argparse.Namespace) -> int:
         "notes": result.notes,
         "ok": result.ok,
     }
-    mark = " OK " if result.ok else "FAIL"
+    if not result.ok:
+        mark = "FAIL"
+    elif result.status == "untested":
+        mark = "WARN"
+        print(
+            f"WARNING: VCF Operations {result.version_text} has not been tested with this release. "
+            "Please report the result: see docs/compatibility.md.",
+            file=sys.stderr,
+        )
+    else:
+        mark = " OK "
     _emit(
         args,
         payload,

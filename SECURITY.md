@@ -22,10 +22,10 @@ Only the latest minor release receives security fixes. Upgrade to get them.
 
 Vulnerabilities in VCF Operations itself are out of scope; report those to Broadcom.
 
-## How the tool protects you
+## Security design
 
-- Read-only API client: state-changing calls are refused in code before they are sent.
-- Designed for a dedicated read-only service account; never needs administrator rights.
-- Passwords are read from the environment or a prompt, never from command-line flags, and never logged.
-- TLS verification is on by default.
-- Releases include checksums, an SBOM and a signed build-provenance attestation.
+The API client refuses calls that change state before they are sent, and the tool is designed to run
+under a dedicated read-only service account, so it never needs administrator rights. Passwords are
+read from the environment or a prompt, never from command-line flags, and are not logged. TLS
+verification is on by default. Each release includes checksums, a software bill of materials and a
+signed build-provenance attestation.
