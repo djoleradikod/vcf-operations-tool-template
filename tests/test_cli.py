@@ -150,8 +150,8 @@ def profile_wired(wired, monkeypatch, profile_file):
 
 def test_check_uses_the_default_profile(profile_wired, capsys):
     assert cli.main(["check"]) == 0
-    out = capsys.readouterr().out
-    assert "https://ops-lab.rainpole.io as svc-lab (profile lab)" in out
+    first = capsys.readouterr().out.splitlines()[0]
+    assert first == "[ OK ] Authenticated to https://ops-lab.rainpole.io as svc-lab (profile lab)"
 
 
 def test_profile_flag_selects_another_profile(profile_wired, capsys):
@@ -163,16 +163,18 @@ def test_profile_flag_selects_another_profile(profile_wired, capsys):
 
 
 def test_flag_overrides_profile(profile_wired, capsys):
-    assert cli.main(["--host", "ops-dr.rainpole.io", "check"]) == 0
-    assert "https://ops-dr.rainpole.io" in capsys.readouterr().out
+    assert cli.main(["--host", "ops-dr.rainpole.io", "check", "-o", "json"]) == 0
+    out = json.loads(capsys.readouterr().out)
+    assert (out["host"], out["profile"]) == ("https://ops-dr.rainpole.io", "lab")
 
 
 def test_profiles_command(profile_file, capsys):
     assert cli.main(["profiles"]) == 0
-    out = capsys.readouterr().out
-    assert "ops-lab.rainpole.io" in out
-    assert "rainpole.io" in out
-    assert str(profile_file) in out
+    lines = capsys.readouterr().out.splitlines()
+    assert lines[0].split() == ["Profile", "Host", "User", "Auth", "source", "Selected"]
+    assert lines[2].split() == ["lab", "ops-lab.rainpole.io", "svc-lab", "local", "yes"]
+    assert lines[3].split() == ["prod", "ops.rainpole.io", "svc-prod", "rainpole.io"]
+    assert lines[-1] == f"File: {profile_file}"
 
 
 def test_profiles_json_marks_the_selected_profile(profile_file, capsys):
