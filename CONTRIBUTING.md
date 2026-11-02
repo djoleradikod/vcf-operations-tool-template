@@ -1,19 +1,18 @@
 # Contributing
 
-Thank you for helping. Two kinds of contribution matter most here:
-
-1. **Compatibility reports.** Run the tool against a VCF Operations version that is not in the matrix and
-   [report what happened](../../issues/new?template=compatibility_report.yml).
-2. **Fixes and improvements** that keep the tool read-only and least-privilege.
+The contribution with the most value is a compatibility report. If you run the tool against a VCF
+Operations version that is not in the matrix, [report what happened](../../issues/new?template=compatibility_report.yml).
+Fixes and improvements are also welcome, as long as the tool stays read-only and keeps to the
+minimum permissions.
 
 ## Ground rules
 
-- **Read-only.** No change may add a state-changing call. New entries on the client's POST allowlist
-  need a reason in the pull request.
-- **Least privilege.** If a change needs a new permission, update `permissions` in `tool.yaml` and say why.
-- **No real environment data.** Use `rainpole.io` host names and `198.51.100.x` addresses in code, tests,
-  docs and screenshots. The privacy scan in CI enforces this.
-- **Naming.** "&lt;Tool&gt; for VCF Operations", never "VCF &lt;Tool&gt;".
+- No change may add a call that changes state. A new entry on the client's `POST` allowlist needs a
+  reason in the pull request description.
+- If a change needs a new permission, update `permissions` in `tool.yaml` and explain why it is needed.
+- Do not include data from a real environment. Use `rainpole.io` host names and `198.51.100.x`
+  addresses in code, tests, docs and screenshots. The privacy scan in CI checks for this.
+- The project name is "&lt;Tool&gt; for VCF Operations", never "VCF &lt;Tool&gt;".
 
 ## Development setup
 

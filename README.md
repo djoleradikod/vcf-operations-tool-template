@@ -19,24 +19,23 @@
   <a href="https://github.com/djoleradikod/vcf-operations-tool-template/issues/new/choose">Report an issue</a>
 </p>
 
-**Template Tool for VCF Operations**: One sentence that says what the tool does and who it is for.
+Template Tool for VCF Operations. One sentence that says what the tool does and who it is for.
 
-> [!NOTE]
-> Independent community project. Not affiliated with, endorsed by or supported by Broadcom.
-> Read-only by design: it never changes your environment and never needs an administrator account.
+It reads from VCF Operations and never writes to it, and it runs under a read-only service account.
+This is an independent community project. It is not affiliated with, endorsed by or supported by Broadcom.
 <!-- repokit:end header -->
 
 <!-- repokit:begin template-notice -->
 > [!IMPORTANT]
-> **This is the template for "&lt;Tool&gt; for VCF Operations" repositories.** Press **Use this template**,
-> then run `python scripts/repokit.py init --name "Your Tool"` and follow
-> [docs/template-guide.md](docs/template-guide.md). Everything below is the README your tool starts with.
+> This repository is the template for "&lt;Tool&gt; for VCF Operations" projects. To start a new tool, choose
+> *Use this template*, run `python scripts/repokit.py init --name "Your Tool"`, and follow
+> [docs/template-guide.md](docs/template-guide.md). The rest of this page is the README a new tool starts with.
 <!-- repokit:end template-notice -->
 
 ## Contents
 
-- [Why this exists](#why-this-exists)
-- [Highlights](#highlights)
+- [Background](#background)
+- [Design](#design)
 - [Compatibility](#compatibility)
 - [Quick start](#quick-start)
 - [Installation](#installation)
@@ -49,41 +48,49 @@
 - [Contributing and support](#contributing-and-support)
 - [Licence and trademarks](#licence-and-trademarks)
 
-## Why this exists
+## Background
 
-TODO: Two short paragraphs. The operational problem in a VCF 9.x estate, who feels it (VI admin,
-platform team, support engineer), and what changes once this tool is in place. Prefer one concrete
-example over a list of features.
+TODO: Two short paragraphs. Describe the operational problem in a VCF 9.x environment, who runs into
+it (VI administrator, platform team, support engineer), and what an operator can do with this tool
+that they could not do before. One concrete incident or scenario is worth more than a feature list.
 
 <p align="center">
   <img src="docs/assets/screenshot.svg" alt="Example output of template-tool check" width="760">
 </p>
 
-## Highlights
+## Design
 
-- **Read-only by design.** The API client refuses any call that could change state before it leaves
-  your machine. See [How it works](#how-it-works).
-- **Least privilege, documented.** A dedicated service account with a read-only role. Never an
-  administrator account. The exact permissions are listed [below](#permissions-least-privilege).
-- **Safe by default.** TLS verification on, HTTPS only, passwords never accepted as command-line flags,
-  tokens released on exit and never logged.
-- **Verifiable releases.** Checksums, a software bill of materials and signed build provenance on every release.
-- TODO: the two or three things that make this tool worth installing.
+The tool is built to be safe to point at a production VCF Operations cluster. It only reads. The API
+client accepts `GET` requests and a short, reviewed list of `POST` endpoints that query data; any
+other call is rejected before a request is built, so a coding mistake cannot turn into a change in
+your environment. The server enforces the same boundary through the read-only role described
+[below](#permissions-least-privilege). Either control on its own would be enough to stop a write; we
+keep both because they fail independently.
+
+Credentials are handled the way an operations team would expect. The password is read from the
+environment or an interactive prompt and is never accepted as a command-line flag, so it does not
+end up in shell history or in a process listing. The session token is released when the tool exits
+and is never written to a log. TLS verification is on unless you turn it off explicitly.
+
+Every release is published with SHA-256 checksums, a software bill of materials and a signed
+build-provenance attestation, so you can confirm that the file you copy to a jump host is the file
+that was built from this repository.
+
+TODO: one paragraph on the design decisions specific to this tool, such as how it limits load on
+VCF Operations, how it handles large inventories, and what it deliberately does not do.
 
 ## Compatibility
 
 <!-- repokit:begin compatibility -->
-**Baseline: VCF Operations 9.1.1 or later.** VCF 9.1.1 updated the open-source dependencies that adapters run on, and management packs built with earlier versions of Management Pack Builder stop collecting after the upgrade ([KB 454434](https://knowledge.broadcom.com/external/article/454434)). Every tool in this family targets 9.1.1 and later so there is one baseline to test.
+The baseline is VCF Operations 9.1.1 or later. VCF 9.1.1 updated the open-source dependencies that adapters run on, and management packs built with earlier versions of Management Pack Builder stop collecting after the upgrade ([KB 454434](https://knowledge.broadcom.com/external/article/454434)). Every tool in this family targets 9.1.1 and later so there is one baseline to test.
 
 | Tool release | VCF Operations | VCF | Status | Notes |
 | --- | --- | --- | --- | --- |
-| 0.1.x | 9.1.1 | 9.1 | ✅ Tested | Lab-validated on a single-node deployment. |
-| 0.1.x | 9.0.x | 9.0 | ❌ Not supported | Below the 9.1.1 baseline. |
-| 0.1.x | 8.18.x | 5.2 | ❌ Not supported | VMware Aria Operations. Below the baseline. |
+| 0.1.x | 9.1.1 | 9.1 | Tested | Lab-validated on a single-node deployment. |
+| 0.1.x | 9.0.x | 9.0 | Not supported | Below the 9.1.1 baseline. |
+| 0.1.x | 8.18.x | 5.2 | Not supported | VMware Aria Operations. Below the baseline. |
 
-✅ Tested end to end by the maintainer · ☑️ Supported, reported working · ⚠️ Untested · ❌ Not supported
-
-Full history and the support policy: [docs/compatibility.md](docs/compatibility.md). Running it somewhere not listed? [Send a compatibility report](https://github.com/djoleradikod/vcf-operations-tool-template/issues/new?template=compatibility_report.yml).
+The status definitions, the full history and the support policy are in [docs/compatibility.md](docs/compatibility.md). If you run the tool on a version that is not listed, please [file a compatibility report](https://github.com/djoleradikod/vcf-operations-tool-template/issues/new?template=compatibility_report.yml); that is how rows move from untested to supported.
 <!-- repokit:end compatibility -->
 
 ## Quick start
@@ -119,23 +126,34 @@ gh attestation verify template_tool_for_vcf_operations-*.whl --repo djoleradikod
 ## Permissions (least privilege)
 
 <!-- repokit:begin permissions -->
-**Read-only. Needs a dedicated service account with a read-only role. Never needs an administrator account.**
+The tool only reads. It runs under a dedicated service account with a read-only role and never needs an administrator account.
 
-- **Account:** Dedicated service account (local or from your identity source). Not a named person, not admin.
-- **Role:** Built-in ReadOnly role, or a custom role cloned from it.
-- **Scope:** All objects the tool reports on. Narrow it to specific object types if your security model needs it.
+| Item | Requirement |
+| --- | --- |
+| Account | A dedicated service account, local or from your identity source. Not a person's account, and not an administrator. |
+| Role | The built-in ReadOnly role, or a custom role cloned from it. |
+| Scope | The objects the tool reports on. Narrow it to specific object types if your security model requires it. |
+
+The role needs these permissions and no others:
 
 | Area | Access | Why it is needed |
 | --- | --- | --- |
 | Suite API | Read | Acquire a session token and read the product version. |
 
-**Not required, never ask for it:** Administrator or any built-in admin role; Write access to policies, alerts, dashboards or adapters; Shell or SSH access to any appliance; vCenter, NSX or SDDC Manager credentials.
+The tool does not need any of the following. Treat a request for them as a bug.
+
+- Administrator or any built-in admin role
+- Write access to policies, alerts, dashboards or adapters
+- Shell or SSH access to any appliance
+- vCenter, NSX or SDDC Manager credentials
+
+Network flows:
 
 | From | To | Port | Purpose |
 | --- | --- | --- | --- |
 | Machine running the tool | VCF Operations (cluster FQDN or load balancer) | 443/TCP | Suite API over HTTPS. TLS verification is on by default. |
 
-Step-by-step role and service-account setup: [docs/permissions.md](docs/permissions.md).
+How to create the service account and role: [docs/permissions.md](docs/permissions.md).
 <!-- repokit:end permissions -->
 
 ## Configuration
@@ -194,9 +212,9 @@ flowchart LR
 ```
 <!-- repokit:end architecture -->
 
-Read-only is enforced in code: the client allows `GET`, plus `POST` only to an explicit allowlist of
-endpoints that read (session token and query endpoints). Anything else is refused with exit code 7
-before a request is sent. Details: [docs/architecture.md](docs/architecture.md).
+The client allows `GET`, and `POST` only to an explicit allowlist of endpoints that read (the session
+token endpoints and query endpoints). Anything else exits with code 7 before a request is sent. The
+full list of calls is in [docs/architecture.md](docs/architecture.md).
 
 ## Troubleshooting
 
@@ -212,17 +230,17 @@ Please report vulnerabilities privately through
 
 ## Contributing and support
 
-Compatibility reports are the most useful contribution: if you run this against a version that is not
-in the table, [tell me how it went](../../issues/new?template=compatibility_report.yml). Code
-contributions are welcome too; start with [CONTRIBUTING.md](CONTRIBUTING.md). Support is
-community-based and best effort, see [SUPPORT.md](SUPPORT.md).
+The most useful contribution is a compatibility report: if you run the tool against a version that
+is not in the table, [report the result](../../issues/new?template=compatibility_report.yml), whether
+it worked or not. Code changes are welcome; [CONTRIBUTING.md](CONTRIBUTING.md) explains the rules.
+Support is provided on a best-effort basis, as described in [SUPPORT.md](SUPPORT.md).
 
 <!-- repokit:begin footer -->
 ## Licence and trademarks
 
 Template Tool for VCF Operations is released under the [Apache-2.0 licence](LICENSE). Copyright 2026 Jay Djonko.
 
-This is an independent community project by [Jay Djonko](https://djonko.dev). It is **not affiliated with, endorsed by or supported by Broadcom**. VMware, VMware Cloud Foundation, VCF and VCF Operations are trademarks of Broadcom Inc. and/or its subsidiaries, used here only to describe compatibility. For product issues, contact Broadcom support.
+This is an independent community project by [Jay Djonko](https://djonko.dev). It is not affiliated with, endorsed by or supported by Broadcom. VMware, VMware Cloud Foundation, VCF and VCF Operations are trademarks of Broadcom Inc. and/or its subsidiaries, used here only to describe compatibility. For product issues, contact Broadcom support.
 
 <sub>More tools and write-ups at [djonko.dev](https://djonko.dev) · [Template Tool for VCF Operations project page](https://djonko.dev/projects/)</sub>
 <!-- repokit:end footer -->

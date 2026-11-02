@@ -49,10 +49,10 @@ SUFFIX = "for VCF Operations"
 PROJECTS_URL = "https://djonko.dev/projects/"
 LICENCES = {"Apache-2.0", "MIT"}
 STATUSES = {
-    "tested": "✅ Tested",
-    "supported": "☑️ Supported",
-    "untested": "⚠️ Untested",
-    "unsupported": "❌ Not supported",
+    "tested": "Tested",
+    "supported": "Supported",
+    "untested": "Untested",
+    "unsupported": "Not supported",
 }
 KINDS = {"script", "agent", "management-pack"}
 MP_APPROACHES = {"none", "mp-builder", "integration-sdk"}
@@ -314,18 +314,17 @@ def block_header(m: dict[str, Any]) -> str:
   <a href="{m["repo_url"]}/issues/new/choose">Report an issue</a>
 </p>
 
-**{m["display_name"]}**: {m["summary"]}
+{m["display_name"]}. {m["summary"]}
 
-> [!NOTE]
-> Independent community project. Not affiliated with, endorsed by or supported by Broadcom.
-> Read-only by design: it never changes your environment and never needs an administrator account."""
+It reads from VCF Operations and never writes to it, and it runs under a read-only service account.
+This is an independent community project. It is not affiliated with, endorsed by or supported by Broadcom."""
 
 
 def block_compat(m: dict[str, Any], *, full: bool = False) -> str:
     c = m["compatibility"]
     rows = c["matrix"] if full else [r for r in c["matrix"] if r["release"] == c["matrix"][0]["release"]]
     lines = [
-        f"**Baseline: VCF Operations {c['baseline']} or later.** {' '.join(str(c['baseline_reason']).split())}",
+        f"The baseline is VCF Operations {c['baseline']} or later. {' '.join(str(c['baseline_reason']).split())}",
         "",
         "| Tool release | VCF Operations | VCF | Status | Notes |",
         "| --- | --- | --- | --- | --- |",
@@ -335,17 +334,13 @@ def block_compat(m: dict[str, Any], *, full: bool = False) -> str:
             f"| {r['release']} | {r['vcf_operations']} | {r.get('vcf', '')} | "
             f"{STATUSES[r['status']]} | {r.get('notes', '')} |"
         )
-    lines += [
-        "",
-        "✅ Tested end to end by the maintainer · ☑️ Supported, reported working · "
-        "⚠️ Untested · ❌ Not supported",
-    ]
     if not full:
         lines += [
             "",
-            "Full history and the support policy: [docs/compatibility.md](docs/compatibility.md). "
-            "Running it somewhere not listed? [Send a compatibility report]"
-            f"({m['repo_url']}/issues/new?template=compatibility_report.yml).",
+            "The status definitions, the full history and the support policy are in "
+            "[docs/compatibility.md](docs/compatibility.md). If you run the tool on a version that is not "
+            f"listed, please [file a compatibility report]({m['repo_url']}/issues/new?template=compatibility_report.yml); "
+            "that is how rows move from untested to supported.",
         ]
     return "\n".join(lines)
 
@@ -353,18 +348,30 @@ def block_compat(m: dict[str, Any], *, full: bool = False) -> str:
 def block_permissions(m: dict[str, Any], *, link: bool = True) -> str:
     p = m["permissions"]
     lines = [
-        f"**{p['summary']}**",
+        f"{p['summary']}",
         "",
-        f"- **Account:** {p['account']}",
-        f"- **Role:** {p['role']}",
+        "| Item | Requirement |",
+        "| --- | --- |",
+        f"| Account | {p['account']} |",
+        f"| Role | {p['role']} |",
     ]
     if p.get("scope"):
-        lines.append(f"- **Scope:** {p['scope']}")
-    lines += ["", "| Area | Access | Why it is needed |", "| --- | --- | --- |"]
+        lines.append(f"| Scope | {p['scope']} |")
+    lines += [
+        "",
+        "The role needs these permissions and no others:",
+        "",
+        "| Area | Access | Why it is needed |",
+        "| --- | --- | --- |",
+    ]
     lines += [f"| {x['area']} | {x['access']} | {x['reason']} |" for x in p["privileges"]]
     lines += [
         "",
-        "**Not required, never ask for it:** " + "; ".join(p["not_required"]) + ".",
+        "The tool does not need any of the following. Treat a request for them as a bug.",
+        "",
+        *[f"- {x}" for x in p["not_required"]],
+        "",
+        "Network flows:",
         "",
         "| From | To | Port | Purpose |",
         "| --- | --- | --- | --- |",
@@ -373,7 +380,7 @@ def block_permissions(m: dict[str, Any], *, link: bool = True) -> str:
     if link:
         lines += [
             "",
-            "Step-by-step role and service-account setup: [docs/permissions.md](docs/permissions.md).",
+            "How to create the service account and role: [docs/permissions.md](docs/permissions.md).",
         ]
     return "\n".join(lines)
 
@@ -419,7 +426,7 @@ def block_footer(m: dict[str, Any]) -> str:
         f"{m['display_name']} is released under the [{m['licence']} licence](LICENSE). "
         f"Copyright {m['copyright_year']} {m['author']['name']}.\n\n"
         f"This is an independent community project by [{m['author']['name']}]({m['author']['url']}). "
-        "It is **not affiliated with, endorsed by or supported by Broadcom**. VMware, VMware Cloud "
+        "It is not affiliated with, endorsed by or supported by Broadcom. VMware, VMware Cloud "
         "Foundation, VCF and VCF Operations are trademarks of Broadcom Inc. and/or its subsidiaries, "
         "used here only to describe compatibility. For product issues, contact Broadcom support.\n\n"
         f"<sub>More tools and write-ups at [djonko.dev]({m['author']['url']}) · "

@@ -17,9 +17,10 @@ records the choice in `tool.yaml` (`management_pack.approach`), and keeps its so
 | Version control | Exported design file, committed here | Full source tree, committed here |
 | Upgrade exposure | Rebuild in the updated builder after platform upgrades such as 9.1.1 ([KB 454434](https://knowledge.broadcom.com/external/article/454434)) | Rebuild against the SDK release that matches the platform |
 
-**Start with Management Pack Builder** when the target has a clean REST API and the value is in getting
-objects and metrics into VCF Operations quickly. **Use the Integration SDK** when you need logic the
-builder cannot express, a non-REST protocol, or proper unit tests.
+Start with Management Pack Builder when the target has a clean REST API and the goal is to get
+objects and metrics into VCF Operations quickly. Move to the Integration SDK when you need logic the
+builder cannot express, a protocol other than REST, or unit tests that run in CI. The SDK costs more
+to build and maintain, so choose it for a reason you can write down in the pack's README.
 
 ## Repository layout
 

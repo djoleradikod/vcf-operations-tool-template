@@ -45,7 +45,7 @@ pre-commit install
 
 ## 5. Write the parts only you can write
 
-Search the repository for `TODO`. The README sections *Why this exists*, *Highlights* and *Usage*,
+Search the repository for `TODO`. The README sections *Background*, *Design* and *Usage*,
 the call table in `docs/architecture.md`, and a real, redacted screenshot in `docs/assets/`.
 
 ## 6. Push and configure
