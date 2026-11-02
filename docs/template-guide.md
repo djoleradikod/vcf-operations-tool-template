@@ -32,6 +32,9 @@ and the template notice, and regenerates everything.
 ## 4. Fill in tool.yaml
 
 - `summary` (one sentence, also the GitHub description) and `description`.
+- `boundary`, if the tool reads anything other than VCF Operations. The README header states what
+  the tool talks to; say exactly which systems it reads and that it never writes to them.
+- `architecture`, if the default diagram for your `kind` does not match what the tool does.
 - `compatibility.matrix`: what you have actually tested.
 - `permissions`: the real minimum role. Rows stay `example: true` until confirmed on a real deployment.
 
