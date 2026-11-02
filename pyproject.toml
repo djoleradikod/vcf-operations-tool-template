@@ -22,7 +22,7 @@ classifiers = [
     "Topic :: System :: Monitoring",
     "Topic :: System :: Systems Administration",
 ]
-dependencies = ["requests>=2.31"]
+dependencies = ["requests>=2.31", "tomli>=2.0; python_version < '3.11'"]
 
 [project.optional-dependencies]
 dev = [
