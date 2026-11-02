@@ -145,6 +145,14 @@ def _is_text(path: Path) -> bool:
 
 # --------------------------------------------------------------------- metadata
 
+# The README header's second sentence, unless tool.yaml sets `boundary`. Tools
+# that read from more than VCF Operations (SDDC Manager, DNS, TLS endpoints)
+# must say so, because the header is the first thing an operator reads.
+DEFAULT_BOUNDARY = (
+    "It reads from VCF Operations and never writes to it, and it runs under a read-only service account."
+)
+MERMAID_START = re.compile(r"^(flowchart|graph|sequenceDiagram|stateDiagram(-v2)?)\b")
+
 
 def load_meta() -> dict[str, Any]:
     meta = yaml.safe_load(read(ROOT / "tool.yaml"))
@@ -159,6 +167,11 @@ def load_meta() -> dict[str, Any]:
         meta["project_page"] = PROJECTS_URL
     meta["repo_url"] = f"https://github.com/{meta['owner_repo']}"
     return meta
+
+
+def boundary(meta: dict[str, Any]) -> str:
+    """What the tool talks to, in one or two sentences, on one line."""
+    return " ".join(str(meta.get("boundary") or DEFAULT_BOUNDARY).split())
 
 
 def validate_meta(meta: dict[str, Any]) -> tuple[list[str], list[str]]:
@@ -204,6 +217,21 @@ def validate_meta(meta: dict[str, Any]) -> tuple[list[str], list[str]]:
         errors.append(f"tool.yaml: version '{meta['version']}' is not semantic (1.2.3 or 1.2.3-rc.1).")
     if meta["licence"] not in LICENCES:
         errors.append(f"tool.yaml: licence must be one of {sorted(LICENCES)}.")
+    if "boundary" in meta:
+        boundary = meta["boundary"]
+        if not isinstance(boundary, str) or not boundary.strip():
+            errors.append("tool.yaml: boundary must be a non-empty sentence, or be left out for the default.")
+        elif len(" ".join(boundary.split())) > 300:
+            warnings.append("tool.yaml: boundary is over 300 characters; keep it to one or two sentences.")
+    if "architecture" in meta:
+        diagram = meta["architecture"]
+        if not isinstance(diagram, str) or not MERMAID_START.match(diagram.strip()):
+            errors.append(
+                "tool.yaml: architecture must be a Mermaid diagram that starts with 'flowchart', "
+                "'graph', 'sequenceDiagram' or 'stateDiagram'."
+            )
+        elif "```" in diagram:
+            errors.append("tool.yaml: architecture must not contain ``` (repokit adds the code fence).")
     if len(str(meta["summary"])) > 160:
         warnings.append("tool.yaml: summary is over 160 characters; it is used as the GitHub description.")
     for topic in meta["topics"]:
@@ -316,7 +344,7 @@ def block_header(m: dict[str, Any]) -> str:
 
 {m["display_name"]}. {m["summary"]}
 
-It reads from VCF Operations and never writes to it, and it runs under a read-only service account.
+{boundary(m)}
 This is an independent community project. It is not affiliated with, endorsed by or supported by Broadcom."""
 
 
@@ -387,7 +415,9 @@ def block_permissions(m: dict[str, Any], *, link: bool = True) -> str:
 
 def block_architecture(m: dict[str, Any]) -> str:
     approach = (m.get("management_pack") or {}).get("approach", "none")
-    if m["kind"] == "management-pack" and approach == "mp-builder":
+    if m.get("architecture"):
+        diagram = str(m["architecture"]).strip()
+    elif m["kind"] == "management-pack" and approach == "mp-builder":
         diagram = """flowchart LR
   subgraph ops["VCF Operations 9.1.1+"]
     mpb["Management Pack Builder design"] --> pak["Installed management pack"]
@@ -533,6 +563,7 @@ def project_card(m: dict[str, Any]) -> dict[str, Any]:
         "managementPackApproach": (m.get("management_pack") or {}).get("approach", "none"),
         "summary": " ".join(str(m["summary"]).split()),
         "description": " ".join(str(m["description"]).split()),
+        "boundary": boundary(m),
         "version": str(m["version"]),
         "licence": m["licence"],
         "author": m["author"],

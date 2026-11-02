@@ -34,6 +34,22 @@ description: >-
   Two or three sentences for the project page and the README. Say what problem
   it solves in a VCF estate, what it reads, and what it never changes.
 
+# Optional. The README header's second sentence, also shown on the project page.
+# Leave it out when the tool talks only to VCF Operations; the default is:
+#   "It reads from VCF Operations and never writes to it, and it runs under a
+#    read-only service account."
+# Set it when the tool reads anything else, and name those systems, e.g.
+#   boundary: >-
+#     It reads from SDDC Manager and VCF Operations and opens TLS connections to
+#     report certificates. It never writes to any of them.
+
+# Optional. A Mermaid diagram for "How it works" and docs/architecture.md, used
+# instead of the default diagram for this kind. Leave out the ``` fence.
+#   architecture: |
+#     flowchart LR
+#       tool["Script"] -- "HTTPS 443, GET" --> sddc["SDDC Manager API"]
+#       tool -- "TLS handshake only" --> endpoints["Appliance endpoints"]
+
 version: 0.1.0
 licence: Apache-2.0 # Apache-2.0 | MIT   (switch with: repokit.py licence MIT)
 copyright_year: 2026

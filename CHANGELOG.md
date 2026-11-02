@@ -21,6 +21,9 @@ All notable changes to this project are documented here. The format follows
   cannot truncate results.
 - Global options are accepted before or after the command name; `-o` is short for `--output`.
 - Dev container for VS Code and GitHub Codespaces.
+- Optional `boundary` and `architecture` keys in `tool.yaml` for tools that read more than
+  VCF Operations: they replace the README header's read-only sentence and the default
+  diagram. `project.json` gains a `boundary` field (schema 1, additive).
 
 ### Fixed
 
