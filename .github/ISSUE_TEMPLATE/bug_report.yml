@@ -1,0 +1,70 @@
+name: Bug report
+description: Something does not work as documented.
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time. **Before pasting anything, remove host names, IP addresses,
+        user names and tokens.** Use `ops.rainpole.io` and `198.51.100.x` as stand-ins.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you ran, what you expected, and what you got instead.
+    validations:
+      required: true
+  - type: input
+    id: tool-version
+    attributes:
+      label: Tool version
+      description: Output of `template-tool --version`.
+      placeholder: template-tool 0.1.0
+    validations:
+      required: true
+  - type: input
+    id: ops-version
+    attributes:
+      label: VCF Operations version
+      description: Full version from About in VCF Operations, or from `template-tool check`.
+      placeholder: 9.1.1
+    validations:
+      required: true
+  - type: dropdown
+    id: deployment
+    attributes:
+      label: VCF Operations deployment
+      options:
+        - Single node
+        - Cluster (primary, replica, data nodes)
+        - Cluster behind a load balancer
+        - Not sure
+    validations:
+      required: true
+  - type: dropdown
+    id: runs-on
+    attributes:
+      label: Where the tool runs
+      options:
+        - Linux
+        - Windows
+        - macOS
+        - Container
+        - Cloud proxy (management pack)
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Output with -v
+      description: Redacted. Debug output never contains passwords or tokens, but it does contain host names.
+      render: shell
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I removed host names, IP addresses, user names and tokens from everything above.
+          required: true
+        - label: The service account has the role described in docs/permissions.md (not an admin account).
+          required: true

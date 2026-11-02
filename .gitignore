@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Release scratch
+release-notes.md
+
+# Local secrets and private terms: never commit
+.env
+.env.*
+.privacy-terms
+*.pem
+*.key
+
+# Management pack build output except what is released
+management-pack/design/build/
+management-pack/design/logs/
+
+# Editors and OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

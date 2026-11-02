@@ -1,0 +1,78 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Build, attest and publish
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: write # create the GitHub release
+      id-token: write # sign the provenance attestation
+      attestations: write # store the attestation
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -e ".[dev]"
+
+      - name: Gate - tag matches tool.yaml and CHANGELOG.md
+        run: python scripts/repokit.py verify-tag "$GITHUB_REF_NAME"
+      - name: Gate - repository rules (strict)
+        env:
+          PRIVACY_TERMS: ${{ secrets.PRIVACY_TERMS }}
+        run: |
+          python scripts/repokit.py check --strict
+          python scripts/repokit.py privacy
+      - name: Gate - tests
+        run: pytest -q
+
+      - name: Build
+        run: |
+          python -m build --outdir dist
+          python -m twine check --strict dist/*
+          python scripts/repokit.py bundle --outdir dist
+          python scripts/repokit.py project-json -o dist/project.json
+          python scripts/repokit.py release-notes "$GITHUB_REF_NAME" > release-notes.md
+
+      - name: Software bill of materials
+        uses: anchore/sbom-action@v0
+        with:
+          path: .
+          format: spdx-json
+          output-file: dist/sbom.spdx.json
+          upload-artifact: false
+          upload-release-assets: false
+
+      - name: Checksums
+        working-directory: dist
+        run: sha256sum -- * > SHA256SUMS && cat SHA256SUMS
+
+      - name: Build provenance attestation
+        if: ${{ !github.event.repository.private }}
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: dist/*
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="$(python scripts/repokit.py meta display_name) $GITHUB_REF_NAME"
+          flags=(--verify-tag --title "$title" --notes-file release-notes.md)
+          if [[ "$GITHUB_REF_NAME" == *-* ]]; then flags+=(--prerelease); else flags+=(--latest); fi
+          gh release create "$GITHUB_REF_NAME" dist/* "${flags[@]}"

@@ -1,0 +1,22 @@
+name: Feature request
+description: Suggest an improvement.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What you are trying to do in your VCF environment, and what gets in the way today.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would help
+  - type: checkboxes
+    id: principles
+    attributes:
+      label: Fit
+      description: Every tool in this family stays read-only and least-privilege.
+      options:
+        - label: This works with a read-only service account and does not need admin rights.

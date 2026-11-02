@@ -1,0 +1,110 @@
+# tool.yaml: the single source of truth for this repository.
+#
+# The README header, compatibility and permission tables, architecture diagram,
+# not-affiliated footer, banners, LICENSE/NOTICE, package metadata and the
+# djonko.dev project card are all generated from this file:
+#
+#   python scripts/repokit.py render      # regenerate
+#   python scripts/repokit.py check       # what CI runs
+#
+# Edit this file, run render, commit both. CI fails if they drift apart.
+
+schema: 1
+
+# true only in the template repository itself. `repokit.py init` sets it to false.
+template: true
+template_repository: djoleradikod/vcf-operations-tool-template
+
+# Short tool name. The display name is always "<name> for VCF Operations".
+# Never "VCF <name>": CI rejects it.
+name: Template Tool
+slug: template-tool # repo, CLI, and djonko.dev/projects/<slug>
+package: template_tool # Python import name
+
+# script | agent | management-pack
+kind: script
+
+# For kind: management-pack, choose how the pack is built.
+# mp-builder (no-code, in-product) | integration-sdk (Python, containerised adapter) | none
+management_pack:
+  approach: none
+
+summary: One sentence that says what the tool does and who it is for.
+description: >-
+  Two or three sentences for the project page and the README. Say what problem
+  it solves in a VCF estate, what it reads, and what it never changes.
+
+version: 0.1.0
+licence: Apache-2.0 # Apache-2.0 | MIT   (switch with: repokit.py licence MIT)
+copyright_year: 2026
+
+author:
+  name: Jay Djonko
+  url: https://djonko.dev
+
+github:
+  owner: djoleradikod
+  repo: template-tool-for-vcf-operations
+
+topics:
+  - vcf-operations
+  - vmware-cloud-foundation
+  - vcf
+  - vmware
+  - observability
+  - automation
+
+compatibility:
+  baseline: 9.1.1
+  baseline_reason: >-
+    VCF 9.1.1 updated the open-source dependencies that adapters run on, and
+    management packs built with earlier versions of Management Pack Builder stop
+    collecting after the upgrade ([KB 454434](https://knowledge.broadcom.com/external/article/454434)).
+    Every tool in this family targets 9.1.1 and later so there is one baseline to test.
+  python: ">=3.10"
+  # status: tested | supported | untested | unsupported
+  #   tested      = run end to end against this version by the maintainer
+  #   supported   = expected to work, reported working, issues will be fixed
+  #   untested    = may work, not verified
+  #   unsupported = known not to work, or below the baseline
+  # Newest tool release first. The README shows the rows for the newest release;
+  # docs/compatibility.md and the project page show them all. `release` is "1.2.x".
+  matrix:
+    - release: 0.1.x
+      vcf_operations: 9.1.1
+      vcf: "9.1"
+      status: tested
+      notes: Lab-validated on a single-node deployment.
+    - release: 0.1.x
+      vcf_operations: 9.0.x
+      vcf: "9.0"
+      status: unsupported
+      notes: Below the 9.1.1 baseline.
+    - release: 0.1.x
+      vcf_operations: 8.18.x
+      vcf: "5.2"
+      status: unsupported
+      notes: VMware Aria Operations. Below the baseline.
+
+permissions:
+  summary: Read-only. Needs a dedicated service account with a read-only role. Never needs an administrator account.
+  account: Dedicated service account (local or from your identity source). Not a named person, not admin.
+  role: Built-in ReadOnly role, or a custom role cloned from it.
+  scope: All objects the tool reports on. Narrow it to specific object types if your security model needs it.
+  # Mark rows with example: true until you have confirmed them against a real
+  # deployment. `repokit.py check --strict` (run on every release) fails while any remain.
+  privileges:
+    - area: Suite API
+      access: Read
+      reason: Acquire a session token and read the product version.
+      example: true
+  not_required:
+    - Administrator or any built-in admin role
+    - Write access to policies, alerts, dashboards or adapters
+    - Shell or SSH access to any appliance
+    - vCenter, NSX or SDDC Manager credentials
+  network:
+    - from: Machine running the tool
+      to: VCF Operations (cluster FQDN or load balancer)
+      port: 443/TCP
+      purpose: Suite API over HTTPS. TLS verification is on by default.

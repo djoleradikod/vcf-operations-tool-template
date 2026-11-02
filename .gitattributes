@@ -1,0 +1,11 @@
+* text=auto eol=lf
+*.ps1 text eol=crlf
+*.psm1 text eol=crlf
+*.psd1 text eol=crlf
+*.pak binary
+*.png binary
+*.zip binary
+
+# Generated from tool.yaml: collapse in diffs, exclude from language stats
+docs/assets/*.svg linguist-generated=true
+src/*/_meta.py linguist-generated=true

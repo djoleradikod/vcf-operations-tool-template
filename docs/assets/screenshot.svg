@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="306" viewBox="0 0 760 306" role="img" aria-label="Example terminal output of template-tool check">
+<rect width="760" height="306" rx="12" fill="#0b1220"/>
+<rect width="760" height="40" rx="12" fill="#1e293b"/><rect y="28" width="760" height="12" fill="#1e293b"/>
+<circle cx="24" cy="20" r="6" fill="#f87171"/><circle cx="44" cy="20" r="6" fill="#fbbf24"/><circle cx="64" cy="20" r="6" fill="#34d399"/>
+<text x="380" y="25" text-anchor="middle" font-family="Inter, Segoe UI, sans-serif" font-size="13" fill="#94a3b8">Example output · replace with a real, redacted capture</text>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="15">
+<text x="28" y="86" fill="#94a3b8">$ <tspan fill="#e2e8f0">template-tool check</tspan></text>
+<text x="28" y="116" fill="#94a3b8">VCF Operations password: </text>
+<text x="28" y="146" fill="#5eead4">[ OK ] Authenticated to https://ops.rainpole.io</text>
+<text x="28" y="176" fill="#5eead4">[ OK ] VCF Operations 9.1.1</text>
+<text x="28" y="206" fill="#5eead4">[ OK ] Compatibility: tested (Lab-validated on a single-node deployment.)</text>
+<text x="28" y="236" fill="#94a3b8">$ <tspan fill="#e2e8f0">template-tool --output json check | jq .status</tspan></text>
+<text x="28" y="266" fill="#fcd34d">"tested"</text>
+</g>
+</svg>

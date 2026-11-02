@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-label="Template Tool for VCF Operations">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f8fafc"/><stop offset="1" stop-color="#e6f4f1"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="640" rx="0" fill="url(#bg)"/>
+  <g transform="translate(0 160)">
+  <rect x="40" y="56" width="6" height="208" rx="3" fill="#0f766e"/>
+  <g font-family="Inter, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+    <text x="72" y="84" font-size="15" letter-spacing="3" fill="#475569">JAY DJONKO · TOOLS FOR VCF OPERATIONS</text>
+    <text x="72" y="146" font-size="60" font-weight="700" fill="#0f172a">Template Tool</text>
+    <text x="72" y="182" font-size="27" font-weight="600" fill="#0f766e">for VCF Operations</text>
+    <text x="72" y="214" font-size="21" fill="#475569">One sentence that says what the tool does and who it is for.</text>
+    <text x="1208" y="292" font-size="15" text-anchor="end" fill="#475569">djonko.dev/projects/</text>
+  </g>
+  <g><line x1="1010" y1="70" x2="1120" y2="120" stroke="#cbe7e1" stroke-width="2"/><line x1="1120" y1="120" x2="1060" y2="210" stroke="#cbe7e1" stroke-width="2"/><line x1="1060" y1="210" x2="1180" y2="245" stroke="#cbe7e1" stroke-width="2"/><line x1="1010" y1="70" x2="930" y2="170" stroke="#cbe7e1" stroke-width="2"/><line x1="930" y1="170" x2="1060" y2="210" stroke="#cbe7e1" stroke-width="2"/><line x1="1120" y1="120" x2="1210" y2="80" stroke="#cbe7e1" stroke-width="2"/><line x1="1180" y1="245" x2="1240" y2="185" stroke="#cbe7e1" stroke-width="2"/><line x1="1060" y1="210" x2="1240" y2="185" stroke="#cbe7e1" stroke-width="2"/><circle cx="1010" cy="70" r="6" fill="#0f766e" opacity="0.75"/><circle cx="1120" cy="120" r="6" fill="#0f766e" opacity="0.75"/><circle cx="1060" cy="210" r="9" fill="#0f766e" opacity="1"/><circle cx="1180" cy="245" r="6" fill="#0f766e" opacity="0.75"/><circle cx="930" cy="170" r="6" fill="#0f766e" opacity="0.75"/><circle cx="1210" cy="80" r="6" fill="#0f766e" opacity="0.75"/><circle cx="1240" cy="185" r="6" fill="#0f766e" opacity="0.75"/></g>
+  </g>
+</svg>

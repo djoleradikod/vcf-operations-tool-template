@@ -1,0 +1,36 @@
+# pre-commit install   ·   pre-commit autoupdate to refresh the pinned revisions
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-yaml
+      - id: check-toml
+      - id: check-json
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: check-added-large-files
+        args: [--maxkb=1024]
+      - id: detect-private-key
+      - id: check-merge-conflict
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: local
+    hooks:
+      - id: repokit-render
+        name: repokit render (tool.yaml -> README, docs, metadata)
+        entry: python scripts/repokit.py render
+        language: system
+        pass_filenames: false
+        files: ^(tool\.yaml|README\.md|docs/.*\.md|licenses/.*)$
+      - id: repokit-privacy
+        name: repokit privacy scan
+        entry: python scripts/repokit.py privacy
+        language: system
+        pass_filenames: false

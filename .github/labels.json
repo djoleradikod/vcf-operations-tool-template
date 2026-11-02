@@ -1,0 +1,11 @@
+[
+  {"name": "bug", "color": "d73a4a", "description": "Something does not work as documented"},
+  {"name": "enhancement", "color": "0e8a16", "description": "New capability or improvement"},
+  {"name": "compatibility", "color": "0f766e", "description": "Compatibility report or matrix change"},
+  {"name": "permissions", "color": "5319e7", "description": "Role, privilege or least-privilege change"},
+  {"name": "security", "color": "b60205", "description": "Security hardening (report vulnerabilities privately)"},
+  {"name": "documentation", "color": "0075ca", "description": "Docs only"},
+  {"name": "triage", "color": "fbca04", "description": "Needs a first look"},
+  {"name": "good first issue", "color": "7057ff", "description": "Small, well-defined starting point"},
+  {"name": "dependencies", "color": "0366d6", "description": "Dependency updates"}
+]

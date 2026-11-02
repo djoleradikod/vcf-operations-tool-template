@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation and project page
+    url: https://djonko.dev/projects/template-tool
+    about: Install, permissions, compatibility and troubleshooting guides.
+  - name: Report a security vulnerability
+    url: https://github.com/djoleradikod/template-tool-for-vcf-operations/security/advisories/new
+    about: Please report vulnerabilities privately, never in a public issue.
+  - name: VCF Operations product problem
+    url: https://support.broadcom.com/
+    about: This is an independent community project. Product issues go to Broadcom support.
