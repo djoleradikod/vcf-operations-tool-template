@@ -34,9 +34,19 @@ between them is overwritten.
 
 ## Privacy scan
 
-`repokit.py privacy` flags e-mail addresses, IP addresses outside the documentation ranges
-(192.0.2.0/24, 198.51.100.0/24, 203.0.113.0/24), internal host names, restrictive document markings, private
-keys, tokens and hard-coded passwords. Use `rainpole.io` and the documentation IP ranges in examples.
+`repokit.py privacy` flags e-mail addresses, IP addresses, internal host names, restrictive document
+markings, private keys, tokens and hard-coded passwords. Use `rainpole.io` and the documentation IP
+ranges in examples.
+
+Some values identify no one and are accepted:
+
+| Kind | Accepted |
+| --- | --- |
+| IPv4 | Documentation ranges 192.0.2.0/24, 198.51.100.0/24 and 203.0.113.0/24 (RFC 5737); the benchmarking range 198.18.0.0/15 (RFC 2544), which VCF also uses internally; loopback 127.0.0.0/8; 0.0.0.0. Addresses and CIDR blocks are both checked. |
+| E-mail | `example.com`, `example.org`, `example.net`, `rainpole.io`, the default SSO domain `vsphere.local`, GitHub `noreply` addresses. |
+
+An account at `vsphere.local` can still carry a person's name, for example `jsmith@vsphere.local`.
+Use role names such as `administrator@vsphere.local` or `svc-vcfops-ro@vsphere.local` in examples.
 
 Names that must never appear are kept out of the repository. Put them, one per line, in either:
 

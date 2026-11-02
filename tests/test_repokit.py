@@ -70,3 +70,49 @@ def test_long_boundary_is_a_warning(meta):
     errors, warnings = repokit.validate_meta(meta)
     assert not [e for e in errors if "boundary" in e]
     assert any("boundary is over 300" in w for w in warnings)
+
+
+# -- privacy scan --------------------------------------------------------------
+
+
+def _finds(text: str) -> list[str]:
+    return [
+        label
+        for label, pattern, allow in repokit.PRIVACY_RULES
+        for match in pattern.finditer(text)
+        if not (allow and allow(match[0]))
+    ]
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "198.51.100.10",
+        "203.0.113.0/24",
+        "198.18.0.0/15",
+        "pool 198.19.255.1",
+        "127.0.1.1",
+        "127.0.0.0/8",
+        "0.0.0.0/0",
+        "VCF 9.1.1.0",
+        "administrator@vsphere.local",
+        "svc-vcfops-ro@rainpole.io",
+    ],
+)
+def test_values_that_identify_no_one_pass(text):
+    assert _finds(text) == []
+
+
+@pytest.mark.parametrize(
+    ("text", "label"),
+    [
+        ("10.20.30.40", "IPv4 address"),  # privacy: allow
+        ("172.16.0.0/12", "IPv4 address"),  # privacy: allow
+        ("198.20.0.1", "IPv4 address"),  # privacy: allow
+        ("198.18.0.0/14", "IPv4 address"),  # privacy: allow (wider than 198.18.0.0/15)
+        ("ops@mail.test", "email address"),  # privacy: allow
+        ("esx01.corp", "internal hostname"),  # privacy: allow
+    ],
+)
+def test_real_looking_values_are_flagged(text, label):
+    assert label in _finds(text)
