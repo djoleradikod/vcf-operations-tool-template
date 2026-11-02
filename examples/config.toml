@@ -1,0 +1,42 @@
+# Profiles for "<Tool> for VCF Operations" tools.
+#
+# Every tool in the family reads the same file, so you describe each VCF
+# Operations deployment once. Copy this file to:
+#
+#   Linux and macOS   ~/.config/vcfops/config.toml   (or $XDG_CONFIG_HOME/vcfops/)
+#   Windows           %APPDATA%\vcfops\config.toml
+#
+# or point VCFOPS_CONFIG at it. Check what a tool sees with `<tool> profiles`.
+#
+# Precedence, highest first: command-line flag, VCFOPS_* environment variable,
+# the selected profile, built-in default. Select a profile with --profile NAME or
+# VCFOPS_PROFILE; otherwise default_profile is used.
+#
+# What this file must not contain:
+#   * Passwords or tokens. The tools refuse to start if they find one. Use
+#     VCFOPS_PASSWORD, the interactive prompt, or password_command below.
+#   * A way to turn off TLS verification. Point ca_bundle at your CA chain
+#     instead. --insecure exists only as a per-run command-line flag.
+
+default_profile = "lab"
+
+[profiles.lab]
+host = "ops-lab.rainpole.io"
+user = "svc-vcfops-ro"
+ca_bundle = "~/.config/vcfops/rainpole-ca.pem"
+
+[profiles.prod]
+host = "ops.rainpole.io"                  # cluster FQDN or load balancer, HTTPS only
+user = "svc-vcfops-ro@rainpole.io"
+auth_source = "rainpole.io"               # name of the authentication source in VCF Operations
+ca_bundle = "~/.config/vcfops/rainpole-ca.pem"
+timeout = 60                              # seconds per request (default 30)
+page_size = 500                           # objects per request for list commands (default 500)
+max_retries = 3                           # retries on 429/502/503/504 and failed connections (default 3)
+
+# password_command runs without a shell and the first line it prints is the
+# password. Any secret manager with a command-line client works, for example:
+#   password_command = "pass show vcfops/prod"
+#   password_command = "secret-tool lookup service vcfops account prod"
+#   password_command = "op read op://Infrastructure/vcfops-prod/password"
+password_command = "pass show vcfops/prod"

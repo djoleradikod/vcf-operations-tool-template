@@ -9,11 +9,23 @@ Least privilege is enforced in code, not just in documentation:
   ReadOnlyViolation before a request is sent.
 * TLS verification is on by default. Plain HTTP is refused.
 * Passwords and tokens are never logged; the token is released on exit.
+
+The client is also careful with the server. Requests are sequential. Overload
+responses (429, 502, 503, 504) and failed connections are retried a bounded
+number of times with exponential backoff and jitter, and a Retry-After header
+from the server is honoured. A read timeout is not retried, because repeating a
+slow query adds load to a cluster that is already struggling.
 """
 
 from __future__ import annotations
 
 import logging
+import random
+import time
+from collections.abc import Callable, Iterator
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 from types import TracebackType
 from typing import Any
 from urllib.parse import urlsplit
@@ -50,12 +62,54 @@ READ_ONLY_POST_PATHS = frozenset(
 # future rename is a flag, not a code change.
 DEFAULT_TOKEN_SCHEME = "vRealizeOpsToken"  # noqa: S105 - a header scheme name, not a secret
 
+# Responses that mean "busy, try again shortly". Every call this client can make
+# is read-only, so repeating one is safe.
+RETRY_STATUSES = frozenset({429, 502, 503, 504})
+BACKOFF_BASE = 1.0  # seconds before the first retry; doubles on each attempt
+BACKOFF_CAP = 30.0  # longest wait between two attempts
+RETRY_AFTER_LIMIT = 120.0  # if the server asks for a longer pause, stop and say so
+MAX_PAGES = 10_000  # guard against a server that ignores the page parameter
+
+
+@dataclass(frozen=True)
+class Page:
+    """One page of a paged Suite API list."""
+
+    number: int
+    items: list[dict[str, Any]]
+    total: int | None
+
+
+def retry_after_seconds(value: str | None, now: datetime | None = None) -> float | None:
+    """Parse a Retry-After header: either delay-seconds or an HTTP date."""
+    if not value:
+        return None
+    value = value.strip()
+    try:
+        return max(0.0, float(value))
+    except ValueError:
+        pass
+    try:
+        when = parsedate_to_datetime(value)
+    except (TypeError, ValueError, IndexError):
+        return None
+    if when.tzinfo is None:
+        when = when.replace(tzinfo=timezone.utc)
+    now = now or datetime.now(timezone.utc)
+    return max(0.0, (when - now).total_seconds())
+
+
+def backoff_delay(attempt: int, base: float = BACKOFF_BASE, cap: float = BACKOFF_CAP) -> float:
+    """Exponential backoff with jitter: between half and all of min(cap, base * 2**attempt)."""
+    ceiling = min(cap, base * (2**attempt))
+    return ceiling * (0.5 + random.random() / 2)  # noqa: S311 - jitter, not cryptography
+
 
 def normalise_host(host: str) -> str:
     """Accept 'ops.example.com' or 'https://ops.example.com[:port]'; refuse plain HTTP."""
     host = (host or "").strip()
     if not host:
-        raise ConfigError("No VCF Operations host given (--host or VCFOPS_HOST).")
+        raise ConfigError("No VCF Operations host given (--host, VCFOPS_HOST or a profile).")
     if "://" not in host:
         host = f"https://{host}"
     parts = urlsplit(host.rstrip("/"))
@@ -79,10 +133,12 @@ class VcfOpsClient:
         verify: bool | str = True,
         timeout: float = 30.0,
         token_scheme: str = DEFAULT_TOKEN_SCHEME,
+        max_retries: int = 3,
         session: requests.Session | None = None,
+        sleep: Callable[[float], None] = time.sleep,
     ) -> None:
         if not username:
-            raise ConfigError("No username given (--user or VCFOPS_USER).")
+            raise ConfigError("No username given (--user, VCFOPS_USER or a profile).")
         if not password:
             raise ConfigError("No password given (VCFOPS_PASSWORD or the interactive prompt).")
         self.base_url = normalise_host(host)
@@ -91,7 +147,14 @@ class VcfOpsClient:
         self._auth_source = auth_source
         self._timeout = timeout
         self._token_scheme = token_scheme
+        self._max_retries = max(0, max_retries)
+        self._sleep = sleep
         self._token: str | None = None
+        # verify is passed on every request, not only set on the session: requests
+        # lets REQUESTS_CA_BUNDLE and CURL_CA_BUNDLE override Session.verify
+        # (psf/requests#3829), which would silently ignore --ca-bundle on machines
+        # that set those variables. A per-request value of True still honours them.
+        self._verify = verify
         self._session = session or requests.Session()
         self._session.verify = verify
         self._session.headers.update(
@@ -154,6 +217,34 @@ class VcfOpsClient:
     def product_version(self) -> tuple[int, int, int]:
         return version_from_api(self.get("/versions/current"))
 
+    def pages(
+        self,
+        path: str,
+        list_key: str,
+        params: dict[str, Any] | None = None,
+        *,
+        page_size: int = 500,
+    ) -> Iterator[Page]:
+        """Walk a paged GET endpoint such as /resources or /alerts, one page at a time.
+
+        Paging stops at pageInfo.totalCount. If the server does not report a total,
+        it stops at the first empty page. A short page is not treated as the end,
+        because the server may cap pageSize below the value requested, and stopping
+        there would silently truncate the result.
+        """
+        seen = 0
+        for number in range(MAX_PAGES):
+            data = self.get(path, {**(params or {}), "page": number, "pageSize": page_size})
+            data = data if isinstance(data, dict) else {}
+            items = data.get(list_key) or []
+            total = (data.get("pageInfo") or {}).get("totalCount")
+            total = int(total) if total is not None else None
+            yield Page(number, items, total)
+            seen += len(items)
+            if not items or (total is not None and seen >= total):
+                return
+        raise ApiError(f"GET {path} returned more than {MAX_PAGES} pages; stopping.")
+
     # -- transport ----------------------------------------------------------
 
     def _request(self, method: str, path: str, *, authenticated: bool = True, **kwargs: Any) -> Any:
@@ -170,21 +261,68 @@ class VcfOpsClient:
             headers["Authorization"] = f"{self._token_scheme} {self._token}"
 
         url = f"{self.base_url}{API_ROOT}{path}"
-        log.debug("%s %s", method, path)
-        try:
-            response = self._session.request(method, url, headers=headers, timeout=self._timeout, **kwargs)
-        except requests.exceptions.SSLError as exc:
-            raise TlsError(f"TLS verification failed for {self.base_url}.") from exc
-        except requests.exceptions.ConnectionError as exc:
-            raise ApiError(
-                f"Cannot reach {self.base_url}.",
-                hint="Check DNS, routing, proxy settings (HTTPS_PROXY) and that port 443 is open.",
-            ) from exc
-        except requests.exceptions.Timeout as exc:
-            raise ApiError(f"{method} {path} timed out after {self._timeout}s.") from exc
+        attempts = self._max_retries + 1
+        for attempt in range(attempts):
+            last = attempt == attempts - 1
+            log.debug("%s %s", method, path)
+            try:
+                response = self._session.request(
+                    method, url, headers=headers, timeout=self._timeout, verify=self._verify, **kwargs
+                )
+            except requests.exceptions.SSLError as exc:
+                raise TlsError(f"TLS verification failed for {self.base_url}.") from exc
+            except requests.exceptions.ConnectionError as exc:
+                # Includes ConnectTimeout: nothing reached the server, so retrying is cheap.
+                if last:
+                    raise ApiError(
+                        f"Cannot reach {self.base_url}"
+                        + (f" after {attempts} attempts." if attempts > 1 else "."),
+                        hint="Check DNS, routing, proxy settings (HTTPS_PROXY) and that port 443 is open.",
+                    ) from exc
+                self._wait(attempt, None, f"{method} {path} could not connect")
+                continue
+            except requests.exceptions.Timeout as exc:
+                raise ApiError(
+                    f"{method} {path} timed out after {self._timeout:g}s.",
+                    hint="Raise --timeout, or reduce the page size so each request does less work.",
+                ) from exc
 
+            status = response.status_code
+            log.debug("%s %s -> HTTP %s", method, path, status)
+            if status in RETRY_STATUSES:
+                headers_in = getattr(response, "headers", None) or {}
+                wait = retry_after_seconds(headers_in.get("Retry-After"))
+                if wait is not None and wait > RETRY_AFTER_LIMIT:
+                    raise ApiError(
+                        f"{method} {path} returned HTTP {status}; the server asked clients to wait "
+                        f"{wait:.0f}s.",
+                        hint="VCF Operations is shedding load. Try again later.",
+                    )
+                if not last:
+                    self._wait(attempt, wait, f"{method} {path} returned HTTP {status}")
+                    continue
+                raise ApiError(
+                    f"{method} {path} returned HTTP {status}"
+                    + (f" after {attempts} attempts." if attempts > 1 else "."),
+                    hint="VCF Operations is busy, starting or degraded. Check the cluster status, then retry.",
+                )
+            return self._decode(method, path, response)
+        raise AssertionError("unreachable")  # pragma: no cover
+
+    def _wait(self, attempt: int, retry_after: float | None, reason: str) -> None:
+        delay = retry_after if retry_after is not None else backoff_delay(attempt)
+        log.warning(
+            "%s; retrying in %.1fs (attempt %d of %d).",
+            reason,
+            delay,
+            attempt + 2,
+            self._max_retries + 1,
+        )
+        self._sleep(delay)
+
+    @staticmethod
+    def _decode(method: str, path: str, response: Any) -> Any:
         status = response.status_code
-        log.debug("%s %s -> HTTP %s", method, path, status)
         if status == 401:
             raise AuthError("VCF Operations rejected the credentials or the session token.")
         if status == 403:
