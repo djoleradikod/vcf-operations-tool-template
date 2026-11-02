@@ -1126,7 +1126,7 @@ PRIVACY_RULES: list[tuple[str, re.Pattern[str], Any]] = [
     (
         "IPv4 address",
         re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}(?:/\d{1,2})?\b"),
-        lambda s: _allowed_ipv4(s),
+        _allowed_ipv4,
     ),
     (
         # Not after "[" (a TOML table such as [profiles.lab]) and not before "(" (a
