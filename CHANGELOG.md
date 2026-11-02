@@ -30,5 +30,8 @@ All notable changes to this project are documented here. The format follows
 - `--ca-bundle` and `--insecure` were ignored when `REQUESTS_CA_BUNDLE` or `CURL_CA_BUNDLE` was
   set, because `requests` lets those variables override the session setting. The setting is now
   passed with every request.
+- The privacy scan accepts the RFC 2544 benchmarking range 198.18.0.0/15, all of loopback
+  127.0.0.0/8 and `@vsphere.local` addresses, none of which identify anyone. IPv4 ranges are
+  now checked as networks, so CIDR blocks inside an accepted range pass too.
 - The privacy scan no longer reports TOML table names such as `[profiles.lab]` or calls such as
   `Path.home()` as internal host names.

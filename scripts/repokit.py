@@ -27,6 +27,7 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import difflib
+import ipaddress
 import json
 import os
 import re
@@ -1086,6 +1087,24 @@ def cmd_bundle(args: argparse.Namespace) -> int:
 # -------------------------------------------------------------------- privacy
 
 
+# Address ranges that identify no one: documentation (RFC 5737), benchmarking
+# (RFC 2544, which VCF also uses internally), and loopback.
+ALLOWED_IPV4 = tuple(
+    ipaddress.ip_network(n)
+    for n in ("192.0.2.0/24", "198.51.100.0/24", "203.0.113.0/24", "198.18.0.0/15", "127.0.0.0/8")
+)
+
+
+def _allowed_ipv4(text: str) -> bool:
+    if int(text.split(".")[0]) <= 9:
+        return True  # version strings such as 9.1.1.0
+    try:
+        net = ipaddress.ip_network(text, strict=False)
+    except ValueError:
+        return True  # not an address, for example 12.345.6.7
+    return net.network_address.is_unspecified or any(net.subnet_of(a) for a in ALLOWED_IPV4)
+
+
 PRIVACY_RULES: list[tuple[str, re.Pattern[str], Any]] = [
     (
         "proprietary marking",
@@ -1096,18 +1115,19 @@ PRIVACY_RULES: list[tuple[str, re.Pattern[str], Any]] = [
         "email address",
         re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}"),
         lambda s: (
-            re.search(r"@(example\.(com|org|net)|rainpole\.io|users\.noreply\.github\.com)$", s, re.I)
+            re.search(
+                r"@(example\.(com|org|net)|rainpole\.io|vsphere\.local|users\.noreply\.github\.com)$",
+                s,
+                re.I,
+            )
             or s.lower().startswith(("noreply@", "git@"))
         ),
     ),
     (
         "IPv4 address",
         re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}(?:/\d{1,2})?\b"),
-        lambda s: (
-            s.startswith(("192.0.2.", "198.51.100.", "203.0.113.", "127.0.0.1", "0.0.0.0"))
-            or int(s.split(".")[0]) <= 9
-        ),
-    ),  # version strings such as 9.1.1.0
+        _allowed_ipv4,
+    ),
     (
         # Not after "[" (a TOML table such as [profiles.lab]) and not before "(" (a
         # call such as Path.home()), so code and config examples do not trip it.
