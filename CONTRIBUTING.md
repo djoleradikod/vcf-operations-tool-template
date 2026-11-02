@@ -16,6 +16,13 @@ minimum permissions.
 
 ## Development setup
 
+The quickest start is the dev container: open the repository in VS Code with the Dev Containers
+extension, or in GitHub Codespaces, and the Python version, linters and pre-commit hooks that CI uses
+are installed for you. The container can run the tests, but it usually cannot reach a VCF Operations
+cluster; run live checks from a machine on your network.
+
+To set up by hand:
+
 ```sh
 python -m venv .venv && . .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"

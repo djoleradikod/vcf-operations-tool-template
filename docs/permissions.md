@@ -14,6 +14,7 @@ The role needs these permissions and no others:
 | Area | Access | Why it is needed |
 | --- | --- | --- |
 | Suite API | Read | Acquire a session token and read the product version. |
+| Objects in the account's scope | Read | List objects with their type, adapter and health (inventory command). Objects outside the scope are not returned. |
 
 The tool does not need any of the following. Treat a request for them as a bug.
 
@@ -57,10 +58,19 @@ equivalent screens in your version and the
    your password manager.
 3. **Assign the role and scope.** Assign the role from step 1 to the account, limited to the objects the
    tool needs.
-4. **Store the secret where the tool runs.** Use your scheduler's or CI system's secret store and expose
-   it as `VCFOPS_PASSWORD`. Do not write it into scripts, cron lines or config files in this repository.
+4. **Store the secret where the tool runs.** On a workstation or jump host, keep it in a secret manager
+   and set `password_command` in your [profile](../README.md#configuration). In a scheduler or CI
+   system, use its secret store and expose the value as `VCFOPS_PASSWORD`. Do not write it into
+   scripts, cron lines or the profile file; the tool refuses a profile file that contains one.
 5. **Confirm.** Run `template-tool check`. A permissions problem exits with code 4 and names the call
    that was refused.
+
+## Scope and what the tool can see
+
+The Suite API answers with the objects inside the account's scope and leaves the rest out without an
+error. That is the behaviour we want: a narrow scope is a valid way to limit what the tool reads. It
+also means a scope that is too narrow shows up as missing objects, not as exit code 4. If a listing
+looks short, check the scope first.
 
 ## Rotation and removal
 

@@ -98,6 +98,10 @@ permissions:
       access: Read
       reason: Acquire a session token and read the product version.
       example: true
+    - area: Objects in the account's scope
+      access: Read
+      reason: List objects with their type, adapter and health (inventory command). Objects outside the scope are not returned.
+      example: true
   not_required:
     - Administrator or any built-in admin role
     - Write access to policies, alerts, dashboards or adapters

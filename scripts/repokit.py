@@ -1078,8 +1078,12 @@ PRIVACY_RULES: list[tuple[str, re.Pattern[str], Any]] = [
         ),
     ),  # version strings such as 9.1.1.0
     (
+        # Not after "[" (a TOML table such as [profiles.lab]) and not before "(" (a
+        # call such as Path.home()), so code and config examples do not trip it.
         "internal hostname",
-        re.compile(r"(?i)\b[a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:corp|lan|intra|internal|home|lab)\b"),
+        re.compile(
+            r"(?i)(?<![\[\w.-])[a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:corp|lan|intra|internal|home|lab)\b(?![(\w-])"
+        ),
         None,
     ),
     ("private key", re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----"), None),

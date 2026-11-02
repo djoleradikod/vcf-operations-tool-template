@@ -10,11 +10,25 @@ from typing import Any
 
 import pytest
 
+Route = Any  # a FakeResponse, an exception to raise, or a list of those served in order
+
+
+@pytest.fixture(autouse=True)
+def isolated_settings(monkeypatch, tmp_path):
+    """Keep the developer's own VCFOPS_* variables and profile file out of every test."""
+    import os
+
+    for name in list(os.environ):
+        if name.startswith("VCFOPS_"):
+            monkeypatch.delenv(name)
+    monkeypatch.setenv("VCFOPS_CONFIG", str(tmp_path / "no-such-config.toml"))
+
 
 @dataclass
 class FakeResponse:
     status_code: int = 200
     payload: Any = None
+    headers: dict[str, str] = field(default_factory=dict)
 
     @property
     def content(self) -> bytes:
@@ -28,9 +42,13 @@ class FakeResponse:
 
 @dataclass
 class FakeSession:
-    """Routes (METHOD, path-suffix) to canned responses and records every call."""
+    """Routes (METHOD, path-suffix) to canned responses and records every call.
 
-    routes: dict[tuple[str, str], FakeResponse] = field(default_factory=dict)
+    A route can be a list: each call takes the next entry and the last one repeats,
+    which is how tests describe "503, then 503, then 200".
+    """
+
+    routes: dict[tuple[str, str], Route] = field(default_factory=dict)
     calls: list[dict[str, Any]] = field(default_factory=list)
     headers: dict[str, str] = field(default_factory=dict)
     verify: Any = True
@@ -40,10 +58,17 @@ class FakeSession:
         self.calls.append({"method": method, "url": url, **kwargs})
         if self.error:
             raise self.error
-        for (m, suffix), response in self.routes.items():
+        for (m, suffix), route in self.routes.items():
             if m == method and url.endswith(suffix):
-                return response
+                if isinstance(route, list):
+                    route = route.pop(0) if len(route) > 1 else route[0]
+                if isinstance(route, Exception):
+                    raise route
+                return route
         return FakeResponse(404, {"message": "not found"})
+
+    def calls_to(self, suffix: str) -> list[dict[str, Any]]:
+        return [c for c in self.calls if c["url"].endswith(suffix)]
 
 
 @pytest.fixture

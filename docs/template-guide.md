@@ -43,12 +43,20 @@ python scripts/repokit.py check && pytest
 pre-commit install
 ```
 
-## 5. Write the parts only you can write
+## 5. Replace the example command
+
+`src/<package>/inventory.py` and the `inventory` command are a working example of the pattern every
+command follows: a module that takes the client and returns rows, a short `cmd_*` function in
+`cli.py`, and `output.emit_rows` for text, JSON and CSV. Keep it if your tool lists objects; otherwise
+replace it with your own module and delete its tests in `tests/test_cli.py`. Keep `check`,
+`profiles` and `about`: operators expect them in every tool of the family.
+
+## 6. Write the parts only you can write
 
 Search the repository for `TODO`. The README sections *Background*, *Design* and *Usage*,
 the call table in `docs/architecture.md`, and a real, redacted screenshot in `docs/assets/`.
 
-## 6. Push and configure
+## 7. Push and configure
 
 ```sh
 git add -A && git commit -m "feat: initial scaffold" && git push
@@ -62,14 +70,14 @@ Then, once per repository, in the GitHub UI:
 - Add the `PRIVACY_TERMS` secret under *Settings → Secrets and variables → Actions*.
 - Turn on *Releases → Immutable releases* if your account offers it.
 
-## 7. First release
+## 8. First release
 
 ```sh
 python scripts/repokit.py bump 0.1.0
 git commit -am "chore(release): v0.1.0" && git tag -a v0.1.0 -m "v0.1.0" && git push --follow-tags
 ```
 
-## 8. Link the project page
+## 9. Link the project page
 
 The djonko.dev project page reads `releases/latest/download/project.json` from the repository, so the
 version, compatibility table and permissions on the site always match the latest release.
