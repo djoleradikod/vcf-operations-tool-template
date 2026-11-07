@@ -35,7 +35,7 @@ echo "== Gate: repository rules (strict) and privacy scan"
 "$PY" scripts/repokit.py privacy
 
 echo "== Gate: tests"
-pytest -q
+"$PY" -m pytest -q
 
 echo "== Build"
 rm -rf dist

@@ -9,7 +9,7 @@ All notable changes to this project are documented here. The format follows
 ### Added
 
 - Repository template: single-source `tool.yaml`, generated README and docs blocks, read-only
-  Suite API client, CI, CodeQL, and a signed release pipeline.
+  Suite API client.
 - Connection profiles in a shared TOML file (`~/.config/vcfops/config.toml`), selected with
   `--profile` or `VCFOPS_PROFILE`, and a `profiles` command to show them. Passwords and TLS
   bypass are refused in the file; `password_command` reads the password from a secret manager.
@@ -32,6 +32,8 @@ All notable changes to this project are documented here. The format follows
 - `make lint` also runs shellcheck, installed with the dev extras, and `make build` also runs
   `twine check --strict`.
 - `repokit.py release-notes` mentions an SBOM only when given `--sbom`.
+- `repokit.py check` spots a copy of the template that skipped `init` from the name of the `origin`
+  remote, not from `GITHUB_REPOSITORY`.
 
 ### Removed
 

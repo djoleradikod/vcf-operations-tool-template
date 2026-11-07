@@ -7,6 +7,7 @@ from __future__ import annotations
 import argparse
 import copy
 import importlib.util
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -51,6 +52,45 @@ def test_release_notes_claim_only_what_the_release_has(monkeypatch, capsys, sbom
     assert "SHA256SUMS" in notes
     assert "attestation" not in notes
     assert ("sbom.spdx.json" in notes) is sbom
+
+
+@pytest.mark.parametrize(
+    ("url", "name"),
+    [
+        (
+            "https://github.com/acme/capacity-lens-for-vcf-operations.git\n",
+            "capacity-lens-for-vcf-operations",
+        ),
+        ("https://github.com/acme/capacity-lens/\n", "capacity-lens"),
+        ("git@github.com:capacity-lens.git\n", "capacity-lens"),
+        ("git@github.com:acme/capacity-lens.git\n", "capacity-lens"),
+        ("", ""),
+    ],
+)
+def test_origin_repo_name(monkeypatch, url, name):
+    done = subprocess.CompletedProcess([], 0, stdout=url)
+    monkeypatch.setattr(repokit.subprocess, "run", lambda *_args, **_kwargs: done)
+    assert repokit.origin_repo_name() == name
+
+
+@pytest.mark.parametrize(
+    ("origin", "still_a_template"),
+    [
+        ("capacity-lens-for-vcf-operations", True),  # made from the template, init skipped
+        ("vcf-operations-tool-template", False),  # the template, or a contributor's fork of it
+        ("VCF-Operations-Tool-Template", False),
+        ("", False),  # no origin remote
+    ],
+)
+def test_check_finds_a_copy_that_skipped_init(monkeypatch, capsys, meta, origin, still_a_template):
+    # Set here because `init` turns these off in a generated project, where this test also runs.
+    meta["template"] = True
+    meta["template_repository"] = "acme/vcf-operations-tool-template"
+    monkeypatch.setattr(repokit, "load_meta", lambda: meta)
+    monkeypatch.setattr(repokit, "origin_repo_name", lambda: origin)
+    result = repokit.cmd_check(argparse.Namespace(strict=False))
+    assert ("still a template" in capsys.readouterr().out) is still_a_template
+    assert (result == 1) is still_a_template
 
 
 def test_architecture_override(meta):

@@ -701,6 +701,17 @@ def cmd_render(args: argparse.Namespace) -> int:
 # --------------------------------------------------------------------- check
 
 
+def origin_repo_name() -> str:
+    """Repository name from the origin remote's URL, or "" if there is no such remote."""
+    try:
+        done = subprocess.run(
+            ["git", "remote", "get-url", "origin"], cwd=ROOT, capture_output=True, text=True
+        )
+    except OSError:
+        return ""
+    return done.stdout.strip().rstrip("/").removesuffix(".git").rpartition("/")[2].rpartition(":")[2]
+
+
 def cmd_check(args: argparse.Namespace) -> int:
     m = load_meta()
     errors, warnings = validate_meta(m)
@@ -761,9 +772,10 @@ def cmd_check(args: argparse.Namespace) -> int:
         errors.append(f"README.md: link to {m['project_page']}")
 
     # Template leftovers.
-    repo_env = os.environ.get("GITHUB_REPOSITORY", "")
     if m.get("template"):
-        if repo_env and repo_env.lower() != str(m.get("template_repository", "")).lower():
+        # Names only: a contributor's fork keeps the template's name, a generated repository does not.
+        origin = origin_repo_name().lower()
+        if origin and origin != str(m.get("template_repository", "")).rpartition("/")[2].lower():
             errors.append("tool.yaml: still a template. Run: python scripts/repokit.py init --name '<Tool>'")
     else:
         for path in text_files():
