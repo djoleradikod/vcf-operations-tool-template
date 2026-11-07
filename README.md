@@ -6,7 +6,6 @@
 
 <p align="center">
   <a href="https://github.com/djoleradikod/vcf-operations-tool-template/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/djoleradikod/vcf-operations-tool-template?sort=semver&display_name=tag&label=release"></a>
-  <a href="https://github.com/djoleradikod/vcf-operations-tool-template/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/djoleradikod/vcf-operations-tool-template/actions/workflows/ci.yml/badge.svg"></a>
   <a href="docs/compatibility.md"><img alt="VCF Operations 9.1.1 or later" src="https://img.shields.io/badge/VCF%20Operations-9.1.1%2B-0f766e"></a>
   <a href="LICENSE"><img alt="Licence Apache-2.0" src="https://img.shields.io/badge/licence-Apache--2.0-1d4ed8"></a>
   <a href="pyproject.toml"><img alt="Python 3.10 or later" src="https://img.shields.io/badge/python-3.10%2B-334155"></a>
@@ -80,9 +79,9 @@ and jitter, and a `Retry-After` header from the server is respected. A request t
 the server is working on it is not retried, because sending the same slow query again adds load to a
 cluster that is already struggling.
 
-Every release is published with SHA-256 checksums, a software bill of materials and a signed
-build-provenance attestation, so you can confirm that the file you copy to a jump host is the file
-that was built from this repository.
+Every release is published with SHA-256 checksums, so you can confirm that the file you copy to a
+jump host is the file that was published. A release also carries a software bill of materials when
+one was generated for it; its release notes say so.
 
 TODO: one paragraph on the design decisions specific to this tool, such as which data it reads,
 how often it is meant to run, and what it deliberately does not do.
@@ -132,7 +131,6 @@ dependency is `requests` (and `tomli` on Python 3.10, which has no built-in TOML
 
 ```sh
 sha256sum --check --ignore-missing SHA256SUMS
-gh attestation verify template_tool_for_vcf_operations-*.whl --repo djoleradikod/template-tool-for-vcf-operations
 ```
 
 ## Permissions (least privilege)

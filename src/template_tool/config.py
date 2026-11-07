@@ -42,7 +42,7 @@ from typing import Any
 
 if sys.version_info >= (3, 11):
     import tomllib
-else:  # pragma: no cover - exercised on Python 3.10 in CI
+else:  # pragma: no cover - runs only on Python 3.10
     import tomli as tomllib
 
 from template_tool.errors import ConfigError

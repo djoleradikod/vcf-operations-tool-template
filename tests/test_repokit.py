@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import argparse
 import copy
 import importlib.util
 from pathlib import Path
@@ -36,6 +37,20 @@ def test_custom_boundary_replaces_the_default(meta):
     assert repokit.DEFAULT_BOUNDARY not in header
     assert "not affiliated with" in header
     assert repokit.project_card(meta)["boundary"].startswith("It reads from SDDC Manager")
+
+
+def test_header_has_no_hosted_ci_badge(meta):
+    assert "actions/workflows" not in repokit.block_header(meta)
+
+
+@pytest.mark.parametrize("sbom", [False, True])
+def test_release_notes_claim_only_what_the_release_has(monkeypatch, capsys, sbom):
+    monkeypatch.setattr(repokit, "_section", lambda _text, _version: "Notes.")
+    assert repokit.cmd_release_notes(argparse.Namespace(version="v1.2.0", sbom=sbom)) == 0
+    notes = capsys.readouterr().out
+    assert "SHA256SUMS" in notes
+    assert "attestation" not in notes
+    assert ("sbom.spdx.json" in notes) is sbom
 
 
 def test_architecture_override(meta):

@@ -32,6 +32,7 @@ dev = [
     "pytest-cov>=5.0",
     "PyYAML>=6.0",
     "ruff>=0.6",
+    "shellcheck-py>=0.10",
     "twine>=5.1",
 ]
 

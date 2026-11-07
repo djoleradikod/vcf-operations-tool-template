@@ -8,16 +8,16 @@ one place (name, compatibility, permissions, licence, links) is generated from i
 
 Commands
   render [--check]           regenerate README/doc blocks, banners, LICENSE/NOTICE, package metadata
-  check [--strict]           every repository rule; CI runs this, releases run --strict
+  check [--strict]           every repository rule; make check runs this, releases run --strict
   init --name NAME [...]     turn a fresh copy of the template into a named tool
   licence {Apache-2.0,MIT}   switch the licence everywhere (files, headers, metadata, badge)
   bump VERSION               set the version and cut the CHANGELOG section
   verify-tag TAG             release gate: tag, version and changelog agree
-  release-notes VERSION      print GitHub release notes for a version
+  release-notes VERSION [--sbom]  print GitHub release notes; --sbom says an SBOM is attached
   project-json [-o FILE]     write the djonko.dev project card
   bundle [--outdir DIR]      add PowerShell/management-pack assets to a release
   privacy [PATH ...]         scan for personal data, secrets and unpublishable material
-  meta FIELD                 print one field (for workflows), e.g. display_name
+  meta FIELD                 print one field (for scripts), e.g. display_name
 
 Requires PyYAML (installed with the dev extras: pip install -e ".[dev]").
 """
@@ -298,11 +298,6 @@ def block_header(m: dict[str, Any]) -> str:
             f"https://img.shields.io/github/v/release/{owner_repo}?sort=semver&display_name=tag&label=release",
             "Latest release",
             f"{m['repo_url']}/releases/latest",
-        ),
-        (
-            f"{m['repo_url']}/actions/workflows/ci.yml/badge.svg",
-            "CI",
-            f"{m['repo_url']}/actions/workflows/ci.yml",
         ),
         (
             f"https://img.shields.io/badge/{shield('VCF Operations')}-{shield(m['compatibility']['baseline'] + '+')}-0f766e",
@@ -974,8 +969,7 @@ def cmd_bump(args: argparse.Namespace) -> int:
         textwrap.dedent(f"""
         ✔ Version {version}. Review, then:
           git commit -am "chore(release): v{version}"
-          git tag -s v{version} -m "v{version}"     # or -a if you do not sign tags
-          git push --follow-tags
+          scripts/release.sh {version}     # builds and checks, then prints the tag and publish commands
     """)
     )
     return 0
@@ -1018,21 +1012,17 @@ def cmd_release_notes(args: argparse.Namespace) -> int:
     if not notes:
         print(f"CHANGELOG.md has no section for {version}", file=sys.stderr)
         return 1
-    owner_repo = m["owner_repo"]
     at_tag = f"{m['repo_url']}/blob/v{version}"
     compat = block_compat(m).replace("(docs/compatibility.md)", f"({at_tag}/docs/compatibility.md)")
+    sbom = "The software bill of materials is attached as `sbom.spdx.json`. " if args.sbom else ""
     parts = [
         notes,
         "## Compatibility",
         compat,
         "## Verify this download",
-        "Every asset is listed in `SHA256SUMS` and carries a signed build-provenance attestation.",
-        "```sh\n"
-        "sha256sum --check --ignore-missing SHA256SUMS\n"
-        f"gh attestation verify <file> --repo {owner_repo}\n"
-        "```",
-        "The software bill of materials is attached as `sbom.spdx.json`. "
-        f"Minimum permissions for this release: [docs/permissions.md]({at_tag}/docs/permissions.md).",
+        "Every asset is listed in `SHA256SUMS`.",
+        "```sh\nsha256sum --check --ignore-missing SHA256SUMS\n```",
+        f"{sbom}Minimum permissions for this release: [docs/permissions.md]({at_tag}/docs/permissions.md).",
         "---",
         f"[Project page]({m['project_page']}) · [Documentation]({m['repo_url']}/tree/v{version}/docs) · "
         f"[Changelog]({at_tag}/CHANGELOG.md)",
@@ -1152,8 +1142,8 @@ PRIVACY_SKIP = {"LICENSE", "NOTICE", "scripts/repokit.py"}
 def private_terms() -> list[str]:
     """Names that must never appear, kept out of the repository itself.
 
-    Sources: the PRIVACY_TERMS environment variable (a CI secret, one term per
-    line or comma-separated) and an untracked .privacy-terms file.
+    Sources: the PRIVACY_TERMS environment variable (one term per line or
+    comma-separated) and an untracked .privacy-terms file.
     """
     raw = os.environ.get("PRIVACY_TERMS", "")
     local = ROOT / ".privacy-terms"
@@ -1255,6 +1245,7 @@ def main(argv: list[str] | None = None) -> int:
 
     p = sub.add_parser("release-notes", help="print release notes")
     p.add_argument("version")
+    p.add_argument("--sbom", action="store_true", help="state that sbom.spdx.json is attached")
     p.set_defaults(func=cmd_release_notes)
 
     p = sub.add_parser("project-json", help="write the djonko.dev project card")

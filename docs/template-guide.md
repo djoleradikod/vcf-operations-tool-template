@@ -6,15 +6,14 @@ This page is deleted by `repokit.py init`. It walks through turning the template
 ## 1. Name the tool
 
 - Display name: **&lt;Tool&gt; for VCF Operations**, for example *Capacity Lens for VCF Operations*.
-  Never *VCF Capacity Lens*. CI rejects it.
+  Never *VCF Capacity Lens*. `repokit.py check` rejects it.
 - Repository: `<slug>-for-vcf-operations`, for example `capacity-lens-for-vcf-operations`.
 - Project page: `https://djonko.dev/projects/<slug>`.
 
 ## 2. Create the repository
 
 On GitHub, open the template repository and choose **Use this template → Create a new repository**.
-Name it as above and make it public (attestations and private vulnerability reporting are free on
-public repositories).
+Name it as above and make it public (private vulnerability reporting is free on public repositories).
 
 ## 3. Initialise
 
@@ -70,14 +69,17 @@ Then, once per repository, in the GitHub UI:
 
 - Convert `docs/assets/social-preview.svg` to PNG (for example `rsvg-convert -w 1280 docs/assets/social-preview.svg > social-preview.png`) and upload it under
   *Settings → General → Social preview*.
-- Add the `PRIVACY_TERMS` secret under *Settings → Secrets and variables → Actions*.
 - Turn on *Releases → Immutable releases* if your account offers it.
+
+On your own machine, put names that must never appear in an untracked `.privacy-terms` file, one per
+line.
 
 ## 8. First release
 
 ```sh
 python scripts/repokit.py bump 0.1.0
-git commit -am "chore(release): v0.1.0" && git tag -a v0.1.0 -m "v0.1.0" && git push --follow-tags
+git commit -am "chore(release): v0.1.0"
+scripts/release.sh 0.1.0        # builds and checks, then prints the tag and publish commands
 ```
 
 ## 9. Link the project page

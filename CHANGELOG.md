@@ -24,6 +24,22 @@ All notable changes to this project are documented here. The format follows
 - Optional `boundary` and `architecture` keys in `tool.yaml` for tools that read more than
   VCF Operations: they replace the README header's read-only sentence and the default
   diagram. `project.json` gains a `boundary` field (schema 1, additive).
+- `scripts/release.sh` (`make release VERSION=1.2.0`) checks and builds release assets locally. It
+  creates no tag and publishes nothing.
+
+### Changed
+
+- `make lint` also runs shellcheck, installed with the dev extras, and `make build` also runs
+  `twine check --strict`.
+- `repokit.py release-notes` mentions an SBOM only when given `--sbom`.
+
+### Removed
+
+- GitHub Actions workflows (CI, CodeQL and release), the CI badge, the required "CI OK" check in the
+  `main` ruleset, and Dependabot updates for Actions. `make check && make build` is now the gate.
+  CodeQL, the Python and operating-system test matrix, PSScriptAnalyzer and build-provenance
+  attestations have no replacement; see `docs/maintaining.md`. Releases no longer carry an
+  attestation, and carry an SBOM only if `syft` is installed where they are built.
 
 ### Fixed
 

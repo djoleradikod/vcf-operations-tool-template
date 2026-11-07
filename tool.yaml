@@ -5,9 +5,9 @@
 # djonko.dev project card are all generated from this file:
 #
 #   python scripts/repokit.py render      # regenerate
-#   python scripts/repokit.py check       # what CI runs
+#   python scripts/repokit.py check       # part of make check
 #
-# Edit this file, run render, commit both. CI fails if they drift apart.
+# Edit this file, run render, commit both. check fails if they drift apart.
 
 schema: 1
 
@@ -16,7 +16,7 @@ template: true
 template_repository: djoleradikod/vcf-operations-tool-template
 
 # Short tool name. The display name is always "<name> for VCF Operations".
-# Never "VCF <name>": CI rejects it.
+# Never "VCF <name>": repokit.py check rejects it.
 name: Template Tool
 slug: template-tool # repo, CLI, and djonko.dev/projects/<slug>
 package: template_tool # Python import name
