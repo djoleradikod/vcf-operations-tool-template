@@ -4,8 +4,7 @@
 
 ## How it was tested
 
-- [ ] `pytest` passes
-- [ ] `python scripts/repokit.py check` passes
+- [ ] `make check && make build` passes (there is no hosted CI, so this is the gate)
 - [ ] Tested against VCF Operations version: <!-- e.g. 9.1.1, or "not needed" -->
 
 ## Checklist

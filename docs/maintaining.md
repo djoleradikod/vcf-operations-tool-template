@@ -1,5 +1,27 @@
 # Maintaining
 
+## The gate
+
+This repository has no hosted CI, and repositories made from it should not add any. Nothing runs
+automatically on a push or pull request, so run the gate yourself before every merge, including
+Dependabot pull requests:
+
+```sh
+make check && make build
+```
+
+`make check` runs ruff, shellcheck, the tests with coverage, the privacy scan and the repository rules.
+`make build` builds the package, runs `twine check` and writes the release assets to `dist/`.
+
+### What the gate does not cover
+
+| Check | Status | What to do |
+| --- | --- | --- |
+| Other Python versions and operating systems | The gate tests only the Python you run it on. The package declares 3.10 and later. | Before a release, repeat `make test` in a virtual environment for each Python you can get, and on Windows or macOS if you have them. On Python 3.11 and later, the `tomli` import used on 3.10 never runs. |
+| CodeQL | Not replaced. No equivalent static security analysis runs. | Ruff covers lint only. Review changes to credential, TLS and request handling by hand. |
+| PowerShell lint (PSScriptAnalyzer) | Not in the gate. | If the repository has `.ps1` files, run `Invoke-ScriptAnalyzer -Path . -Recurse -Severity Warning,Error -EnableExit` in PowerShell. |
+| Build provenance | Not replaced. See [Releasing](releasing.md#verify-a-release). | Sign release tags. |
+
 ## repokit
 
 `scripts/repokit.py` keeps the repository consistent. `tool.yaml` is the single source of truth, and
@@ -10,11 +32,11 @@ project page cannot disagree about versions or permissions.
 | --- | --- |
 | `repokit.py render` | Regenerates the README header, compatibility, permissions, architecture and footer blocks, the matching blocks in `docs/`, both banners, `LICENSE`/`NOTICE`, the licence fields in `pyproject.toml`, and `src/<package>/_meta.py`. |
 | `repokit.py render --check` | Shows a diff and fails if anything is stale. |
-| `repokit.py check` | All repository rules (below). CI runs it on every push. |
-| `repokit.py check --strict` | Warnings become errors. The release workflow runs this. |
+| `repokit.py check` | All repository rules (below). `make check` runs it. |
+| `repokit.py check --strict` | Warnings become errors. `scripts/release.sh` runs this. |
 | `repokit.py licence MIT` | Switches the licence: `LICENSE`, `NOTICE`, every SPDX header, `pyproject.toml`, the badge. |
 | `repokit.py bump 1.2.0` | Sets the version everywhere and dates the changelog section. |
-| `repokit.py release-notes 1.2.0` | Prints the release notes the workflow publishes. |
+| `repokit.py release-notes 1.2.0` | Prints the release notes. `--sbom` adds the line saying an SBOM is attached. |
 | `repokit.py project-json -o card.json` | Writes the djonko.dev project card. |
 | `repokit.py privacy` | Scans for personal data, secrets and material not meant for publication. |
 
@@ -50,8 +72,11 @@ Use role names such as `administrator@vsphere.local` or `svc-vcfops-ro@vsphere.l
 
 Names that must never appear are kept out of the repository. Put them, one per line, in either:
 
-- the `PRIVACY_TERMS` repository secret (CI reads it), or
-- an untracked `.privacy-terms` file for local runs (already in `.gitignore`).
+- an untracked `.privacy-terms` file (already in `.gitignore`), or
+- the `PRIVACY_TERMS` environment variable.
+
+Without one of these the scan cannot look for those names, so set one up on the machine you merge
+and release from.
 
 Add `privacy: allow` to a line to accept a deliberate finding.
 

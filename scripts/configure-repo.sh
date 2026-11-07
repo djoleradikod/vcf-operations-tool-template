@@ -60,6 +60,5 @@ cat <<NEXT
 
 Done. Remaining one-off steps in the GitHub UI:
   - Settings > General > Social preview: upload a PNG of docs/assets/social-preview.svg
-  - Settings > Secrets and variables > Actions: add PRIVACY_TERMS
   - Settings > General > Releases: enable immutable releases if offered
 NEXT

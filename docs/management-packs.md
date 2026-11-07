@@ -13,13 +13,13 @@ records the choice in `tool.yaml` (`management_pack.approach`), and keeps its so
 | Data shaping | Field mapping, simple relationships | Arbitrary logic, joins, derived metrics, events |
 | Where it runs | Cloud proxy, inside VCF Operations' own runtime | A container on the cloud proxy |
 | Build tooling | In-product (*Developer Center*) | `mp-init`, `mp-test`, `mp-build` on a workstation with Docker |
-| Testing | Interactive, in the builder | Local test harness (`mp-test`) and unit tests in CI |
+| Testing | Interactive, in the builder | Local test harness (`mp-test`) and unit tests |
 | Version control | Exported design file, committed here | Full source tree, committed here |
 | Upgrade exposure | Rebuild in the updated builder after platform upgrades such as 9.1.1 ([KB 454434](https://knowledge.broadcom.com/external/article/454434)) | Rebuild against the SDK release that matches the platform |
 
 Start with Management Pack Builder when the target has a clean REST API and the goal is to get
 objects and metrics into VCF Operations quickly. Move to the Integration SDK when you need logic the
-builder cannot express, a protocol other than REST, or unit tests that run in CI. The SDK costs more
+builder cannot express, a protocol other than REST, or unit tests. The SDK costs more
 to build and maintain, so choose it for a reason you can write down in the pack's README.
 
 ## Repository layout
@@ -31,7 +31,7 @@ management-pack/
 └── dist/                the .pak (and design export) to attach to a release
 ```
 
-The release workflow attaches everything in `management-pack/dist/` (`.pak`, `.json`, `.zip`). A
+The release script bundles everything in `management-pack/dist/` (`.pak`, `.json`, `.zip`). A
 management-pack repository without a `.pak` there fails the release on purpose.
 
 ## After every VCF Operations upgrade
